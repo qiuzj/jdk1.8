@@ -72,7 +72,7 @@ public final class Integer extends Number implements Comparable<Integer> {
     public static final Class<Integer>  TYPE = (Class<Integer>) Class.getPrimitiveClass("int");
 
     /**
-     * All possible chars for representing a number as a String
+     * All possible chars for representing a number as a String. 10个数字+26个字母：0~9,a~z
      */
     final static char[] digits = {
         '0' , '1' , '2' , '3' , '4' , '5' ,
@@ -338,7 +338,7 @@ public final class Integer extends Number implements Comparable<Integer> {
 
         return charPos;
     }
-
+    // 100个字符。十位数转换为对应字符。00~09,10~19,20~29,30~39,40~49,50~59,60~69,70~79,80~89,90~99，00~99作为索引号，就可以找到对应的十位数字符了。
     final static char [] DigitTens = {
         '0', '0', '0', '0', '0', '0', '0', '0', '0', '0',
         '1', '1', '1', '1', '1', '1', '1', '1', '1', '1',
@@ -351,7 +351,7 @@ public final class Integer extends Number implements Comparable<Integer> {
         '8', '8', '8', '8', '8', '8', '8', '8', '8', '8',
         '9', '9', '9', '9', '9', '9', '9', '9', '9', '9',
         } ;
-
+    // 100个字符。个位数转换为对应字符。00~09,10~19,20~29,30~39,40~49,50~59,60~69,70~79,80~89,90~99，00~99作为索引号，就可以找到对应的个位数字符了。
     final static char [] DigitOnes = {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -397,8 +397,8 @@ public final class Integer extends Number implements Comparable<Integer> {
     public static String toString(int i) {
         if (i == Integer.MIN_VALUE)
             return "-2147483648";
-        int size = (i < 0) ? stringSize(-i) + 1 : stringSize(i);
-        char[] buf = new char[size];
+        int size = (i < 0) ? stringSize(-i) + 1 : stringSize(i); // i的位数，负号算1位
+        char[] buf = new char[size]; // 整数i对应的字符数组
         getChars(i, size, buf);
         return new String(buf, true);
     }
@@ -432,43 +432,43 @@ public final class Integer extends Number implements Comparable<Integer> {
      */
     static void getChars(int i, int index, char[] buf) {
         int q, r;
-        int charPos = index;
-        char sign = 0;
+        int charPos = index; // index为i的位数
+        char sign = 0; // 符号标识
 
         if (i < 0) {
             sign = '-';
-            i = -i;
+            i = -i; // 负数转正数
         }
 
-        // Generate two digits per iteration
+        // Generate two digits per iteration. 每次循环转换整数的最后2位数（十位数和个位数）为对应字符
         while (i >= 65536) {
             q = i / 100;
         // really: r = i - (q * 100);
-            r = i - ((q << 6) + (q << 5) + (q << 2));
+            r = i - ((q << 6) + (q << 5) + (q << 2)); // 十位数+个位数部分。r = i - q * 100; q * 100 = q * 64 + q * 32 + q * 4 = (q << 6) + (q << 5) + (q << 2)
             i = q;
-            buf [--charPos] = DigitOnes[r];
-            buf [--charPos] = DigitTens[r];
+            buf [--charPos] = DigitOnes[r]; // r的个位数转换为对应字符
+            buf [--charPos] = DigitTens[r]; // r的十位数转换为对应字符
         }
 
         // Fall thru to fast mode for smaller numbers
         // assert(i <= 65536, i);
         for (;;) {
-            q = (i * 52429) >>> (16+3);
-            r = i - ((q << 3) + (q << 1));  // r = i-(q*10) ...
+            q = (i * 52429) >>> (16+3); // q = value / 10 = (i * 52429) >>> (16 + 3)；2的19次方=524288；524288/52429=9.999961853...，524288/52429=10.0001525902...
+            r = i - ((q << 3) + (q << 1));  // r = i-(q*10) ...；个位数部分。r = i - (q * 10)；q * 10 = q * 8 + q * 2 = (q << 3) + (q << 1)
             buf [--charPos] = digits [r];
             i = q;
-            if (i == 0) break;
+            if (i == 0) break; // 如果本轮循环进来时，i只有1位数，那么执行到此处i=0，结束循环
         }
         if (sign != 0) {
             buf [--charPos] = sign;
         }
     }
-
+    // 通过与数组内元素进行比较，判断目标数字是几位数。相当于if(i<=9)return 1;else if(i<=99)return 2;else if(i<=999)return 3;...
     final static int [] sizeTable = { 9, 99, 999, 9999, 99999, 999999, 9999999,
                                       99999999, 999999999, Integer.MAX_VALUE };
 
     // Requires positive x
-    static int stringSize(int x) {
+    static int stringSize(int x) { // 正数x的位数
         for (int i=0; ; i++)
             if (x <= sizeTable[i])
                 return i+1;
