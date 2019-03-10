@@ -196,7 +196,7 @@ class Thread implements Runnable {
     }
 
     /**
-     * 当前线程对应的ThreadLocal
+     * 当前线程对应的ThreadLocalMap（key为ThreadLocal，value为设置的值），一个线程可以对应多个ThreadLocal。
      * <p>
      * ThreadLocal values pertaining to this thread. This map is maintained
      * by the ThreadLocal class. */
