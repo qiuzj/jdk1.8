@@ -184,7 +184,7 @@ public class VM {
     // The initial value of this field is arbitrary; during JRE initialization
     // it will be reset to the value specified on the command line, if any,
     // otherwise to Runtime.getRuntime().maxMemory().
-    //
+    // JVM启动后，会通过System调用初始化方法，进而调用saveAndRemoveProperties(Properties props)，初始化directMemory
     private static long directMemory = 64 * 1024 * 1024;
 
     // Returns the maximum amount of allocatable direct buffer memory.
@@ -274,6 +274,8 @@ public class VM {
 
         savedProps.putAll(props);
 
+        // 如果我们通过-Dsun.nio.MaxDirectMemorySize指定了这个属性，只要它不等于-1，那效果和加了-XX:MaxDirectMemorySize一样的，
+        // 如果两个参数都没指定，那么最大堆外内存的值来自于directMemory = Runtime.getRuntime().maxMemory()
         // Set the maximum amount of direct memory.  This value is controlled
         // by the vm option -XX:MaxDirectMemorySize=<size>.
         // The maximum amount of allocatable direct buffer memory (in bytes)

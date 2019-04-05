@@ -1199,7 +1199,7 @@ public final class System {
         // Save a private copy of the system properties object that
         // can only be accessed by the internal implementation.  Remove
         // certain system properties that are not intended for public access.
-        sun.misc.VM.saveAndRemoveProperties(props);
+        sun.misc.VM.saveAndRemoveProperties(props); // 这里
 
 
         lineSeparator = props.getProperty("line.separator");
