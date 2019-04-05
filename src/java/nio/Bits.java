@@ -670,7 +670,7 @@ class Bits {                            // package-private
     // A user-settable upper limit on the maximum amount of allocatable
     // direct buffer memory.  This value may be changed during VM
     // initialization if it is launched with "-XX:MaxDirectMemorySize=<size>".
-    private static volatile long maxMemory = VM.maxDirectMemory();
+    private static volatile long maxMemory = VM.maxDirectMemory(); // 最大堆外内存：-XX:MaxDirectMemorySize=<size>
     private static final AtomicLong reservedMemory = new AtomicLong();
     private static final AtomicLong totalCapacity = new AtomicLong();
     private static final AtomicLong count = new AtomicLong();
@@ -684,7 +684,7 @@ class Bits {                            // package-private
     // These methods should be called whenever direct memory is allocated or
     // freed.  They allow the user to control the amount of direct memory
     // which a process may access.  All sizes are specified in bytes.
-    static void reserveMemory(long size, int cap) {
+    static void reserveMemory(long size, int cap) { // 真正的内存分配是使用的Bits.reserveMemory方法
 
         if (!memoryLimitSet && VM.isBooted()) {
             maxMemory = VM.maxDirectMemory();

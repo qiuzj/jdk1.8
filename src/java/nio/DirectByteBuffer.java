@@ -120,7 +120,7 @@ class DirectByteBuffer
         boolean pa = VM.isDirectMemoryPageAligned();
         int ps = Bits.pageSize();
         long size = Math.max(1L, (long)cap + (pa ? ps : 0));
-        Bits.reserveMemory(size, cap);
+        Bits.reserveMemory(size, cap); // 真正的内存分配是使用的Bits.reserveMemory方法
 
         long base = 0;
         try {
