@@ -1,6 +1,12 @@
 package javautil.concurrent;
 import java.util.concurrent.CountDownLatch;
 
+/**
+ * 等待所有运动员到达终点（不关注起跑时间，只关注是否都到达终点了），裁判吹口哨结束比赛（只有裁判一个人等待）.
+ * 
+ * @author 二进制之路
+ *
+ */
 public class CountDownLatchTest1 {
 
     private static int LATCH_SIZE = 5;

@@ -19,6 +19,8 @@ public class AtomicReferenceTest {
 		System.out.println("p3 is " + p3);
 		System.out.println("p3.equals(p1)=" + p3.equals(p1));
 		System.out.println("p3.equals(p2)=" + p3.equals(p2));
+		System.out.println("p3 == p1 " + (p3 == p1));
+		System.out.println("p3 == p2 " + (p3 == p2));
 	}
 }
 
