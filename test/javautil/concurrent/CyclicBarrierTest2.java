@@ -3,7 +3,7 @@ import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.BrokenBarrierException;
 
 /**
- * 等待所有运动员准备就绪（运动员之间相互等待，同时开始起跑），裁判吹口哨开始比赛.
+ * 所有运动员相互等待彼此准备就绪，然后开始比赛。无裁判，运动员同时起跑。
  * 
  * @author 二进制之路
  *

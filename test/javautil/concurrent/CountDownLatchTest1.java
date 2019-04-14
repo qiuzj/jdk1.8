@@ -2,7 +2,7 @@ package javautil.concurrent;
 import java.util.concurrent.CountDownLatch;
 
 /**
- * 等待所有运动员到达终点（不关注起跑时间，只关注是否都到达终点了），裁判吹口哨结束比赛（只有裁判一个人等待）.
+ * 裁判等待所有运动员到达终点，然后吹口哨结束比赛。不关注运动员的起跑时间，只关注是否都已到达终点。只有裁判在等待，可以有1或N名裁判。
  * 
  * @author 二进制之路
  *
@@ -21,6 +21,18 @@ public class CountDownLatchTest1 {
             for(int i=0; i<LATCH_SIZE; i++)
                 new InnerThread().start();
 
+            new Thread(new Runnable() {
+				public void run() {
+					System.out.println("submain await begin.");
+					try {
+						doneSignal.await();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					System.out.println("submain await finished.");
+				}
+			}).start();
+            
             System.out.println("main await begin.");
             // "主线程"等待线程池中5个任务的完成
             doneSignal.await();
@@ -34,7 +46,7 @@ public class CountDownLatchTest1 {
     static class InnerThread extends Thread{
         public void run() {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(2000);
                 System.out.println(Thread.currentThread().getName() + " sleep 1000ms.");
                 // 将CountDownLatch的数值减1
                 doneSignal.countDown();

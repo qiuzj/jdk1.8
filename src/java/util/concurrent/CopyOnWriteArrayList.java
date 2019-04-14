@@ -52,6 +52,15 @@ import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
+ * <pre>
+ * 它相当于线程安全的ArrayList。和ArrayList一样，它是个可变数组；但是和ArrayList不同的时，它具有以下特性：
+ * (01). 它最适合于具有以下特征的应用程序：List 大小通常保持很小，只读操作远多于可变操作，需要在遍历期间防止线程间的冲突。
+ * (02). 它是线程安全的。
+ * (03). 因为通常需要复制整个基础数组，所以可变操作（add()、set() 和 remove() 等等）的开销很大。
+ * (04). 迭代器支持hasNext(), next()等不可变操作，但不支持可变 remove()等操作。
+ * (05). 使用迭代器进行遍历的速度很快，并且不会与其他线程发生冲突。在构造迭代器时，迭代器依赖于
+ * </pre>
+ * 
  * A thread-safe variant of {@link java.util.ArrayList} in which all mutative
  * operations ({@code add}, {@code set}, and so on) are implemented by
  * making a fresh copy of the underlying array.
@@ -96,20 +105,20 @@ public class CopyOnWriteArrayList<E>
     final transient ReentrantLock lock = new ReentrantLock();
 
     /** The array, accessed only via getArray/setArray. */
-    private transient volatile Object[] array;
+    private transient volatile Object[] array; // volatile保证可见性
 
     /**
      * Gets the array.  Non-private so as to also be accessible
      * from CopyOnWriteArraySet class.
      */
-    final Object[] getArray() {
+    final Object[] getArray() { // 包级别
         return array;
     }
 
     /**
      * Sets the array.
      */
-    final void setArray(Object[] a) {
+    final void setArray(Object[] a) { // 包级别
         array = a;
     }
 
@@ -178,6 +187,7 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
+     * 遍历数组，在指定范围内查找指定元素.
      * static version of indexOf, to allow repeated calls without
      * needing to re-acquire array each time.
      * @param o element to search for
@@ -413,10 +423,10 @@ public class CopyOnWriteArrayList<E>
                 int len = elements.length;
                 Object[] newElements = Arrays.copyOf(elements, len);
                 newElements[index] = element;
-                setArray(newElements);
+                setArray(newElements); // 这里不需要扩容，为什么这里不能直接修改原数组，而需要复制一次？
             } else {
                 // Not quite a no-op; ensures volatile write semantics
-                setArray(elements);
+                setArray(elements); // 值不变也需要更新？
             }
             return oldValue;
         } finally {
@@ -425,23 +435,27 @@ public class CopyOnWriteArrayList<E>
     }
 
     /**
+     * <pre>
+     * 写时不阻塞写，写写互斥.
+     * 流程：1.复制数组 2.添加元素 3.替换原数组
      * Appends the specified element to the end of this list.
+     * </pre>
      *
      * @param e element to be appended to this list
      * @return {@code true} (as specified by {@link Collection#add})
      */
     public boolean add(E e) {
         final ReentrantLock lock = this.lock;
-        lock.lock();
+        lock.lock(); // 加锁
         try {
-            Object[] elements = getArray();
+            Object[] elements = getArray(); // 原数组
             int len = elements.length;
-            Object[] newElements = Arrays.copyOf(elements, len + 1); // 每次这样搞不是很慢吗？因为是COW
-            newElements[len] = e;
-            setArray(newElements);
+            Object[] newElements = Arrays.copyOf(elements, len + 1); // 使用COW复制新数组，大小加1
+            newElements[len] = e; // 将新元素添加到新数组尾部
+            setArray(newElements); // 新数组替换旧数组
             return true;
         } finally {
-            lock.unlock();
+            lock.unlock(); // 解锁
         }
     }
 
@@ -628,15 +642,22 @@ public class CopyOnWriteArrayList<E>
         try {
             Object[] current = getArray();
             int len = current.length;
+            // 可能已被修改过，无论数据进行任何修改，都是统一进行复制替换，因此引用必然被修改过了.
+            // 分为两步，而不是再来一次indexOf整个数组，是为了提升性能.
             if (snapshot != current) {
                 // Optimize for lost race to another addXXX operation
                 int common = Math.min(snapshot.length, len);
                 for (int i = 0; i < common; i++)
+                	// 因为snapshot已被检查过一遍，因此如果current[i] = snapshot[i]，说明元素没变不需要进行eq比较
+                	// 只有当current[i] != snapshot[i]时，说明相同位置的元素被修改过了，这时才需要比较元素是否已存在
+                	// 如果相同位置被修改过了，且找到相同的元素，则不需要add
                     if (current[i] != snapshot[i] && eq(e, current[i]))
                         return false;
+                // 遍历并比较common之后的元素
                 if (indexOf(e, current, common, len) >= 0)
                         return false;
             }
+            // 下面是COW
             Object[] newElements = Arrays.copyOf(current, len + 1);
             newElements[len] = e;
             setArray(newElements);
