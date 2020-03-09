@@ -383,7 +383,7 @@ public abstract class AtomicLongFieldUpdater<T> {
                 field = AccessController.doPrivileged(
                     new PrivilegedExceptionAction<Field>() {
                         public Field run() throws NoSuchFieldException {
-                            return tclass.getDeclaredField(fieldName);
+                            return tclass.getDeclaredField(fieldName); // 1.反射根据字段名获取字段
                         }
                     });
                 modifiers = field.getModifiers();
@@ -411,7 +411,7 @@ public abstract class AtomicLongFieldUpdater<T> {
             this.cclass = (Modifier.isProtected(modifiers) &&
                            caller != tclass) ? caller : null;
             this.tclass = tclass;
-            offset = unsafe.objectFieldOffset(field);
+            offset = unsafe.objectFieldOffset(field); // 2.使用Unsafe类获取字段相对对象的内存偏移量
         }
 
         private void fullCheck(T obj) {
