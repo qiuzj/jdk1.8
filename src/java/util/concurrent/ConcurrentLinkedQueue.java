@@ -178,8 +178,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      */
 
     private static class Node<E> {
-        volatile E item;
-        volatile Node<E> next;
+        volatile E item; // 泛型节点值
+        volatile Node<E> next; // 下一个节点
 
         /**
          * Constructs a new node.  Uses relaxed write because item can
@@ -188,7 +188,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         Node(E item) {
             UNSAFE.putObject(this, itemOffset, item);
         }
-
+        /** 如果原值为cmp，则CAS设置item的值为val */
         boolean casItem(E cmp, E val) {
             return UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
         }
@@ -196,7 +196,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         void lazySetNext(Node<E> val) {
             UNSAFE.putOrderedObject(this, nextOffset, val);
         }
-
+        /** 如果原值为cmp，则CAS设置next的值为val */
         boolean casNext(Node<E> cmp, Node<E> val) {
             return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
         }
@@ -204,8 +204,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         // Unsafe mechanics
 
         private static final sun.misc.Unsafe UNSAFE;
-        private static final long itemOffset;
-        private static final long nextOffset;
+        private static final long itemOffset; // item字段的内存偏移量
+        private static final long nextOffset; // next字段的内存偏移量
 
         static {
             try {
@@ -327,10 +327,10 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         checkNotNull(e);
         final Node<E> newNode = new Node<E>(e);
 
-        for (Node<E> t = tail, p = t;;) {
-            Node<E> q = p.next;
-            if (q == null) {
-                // p is last node
+        for (Node<E> t = tail, p = t;;) { // 刚开始t和p都指向尾节点
+            Node<E> q = p.next; // 下一个节点
+            if (q == null) { // q为null，表示达到尾部
+                // p is last node. 尝试将新节点newNode添加到链尾
                 if (p.casNext(null, newNode)) {
                     // Successful CAS is the linearization point
                     // for e to become an element of this queue,
@@ -347,7 +347,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                 // jump to head, from which all live nodes are always
                 // reachable.  Else the new tail is a better bet.
                 p = (t != (t = tail)) ? t : head;
-            else
+            else // 更新p为尾节点
                 // Check for tail updates after two hops.
                 p = (p != t && t != (t = tail)) ? t : q;
         }
@@ -358,7 +358,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         for (;;) {
             for (Node<E> h = head, p = h, q;;) {
                 E item = p.item;
-
+                // 获取头节点的值
                 if (item != null && p.casItem(item, null)) {
                     // Successful CAS is the linearization point
                     // for item to be removed from this queue.
