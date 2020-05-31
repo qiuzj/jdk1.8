@@ -72,6 +72,7 @@ public final class Integer extends Number implements Comparable<Integer> {
     public static final Class<Integer>  TYPE = (Class<Integer>) Class.getPrimitiveClass("int");
 
     /**
+     * 数组大小为36，索引范围为：0~35
      * All possible chars for representing a number as a String. 10个数字+26个字母：0~9,a~z
      */
     final static char[] digits = {
@@ -351,6 +352,8 @@ public final class Integer extends Number implements Comparable<Integer> {
         '8', '8', '8', '8', '8', '8', '8', '8', '8', '8',
         '9', '9', '9', '9', '9', '9', '9', '9', '9', '9',
         } ;
+    // 数组大小为100，索引范围为：0~99。索引值其实是整数对100取余的余数
+    // 作用：根据传入的索引值，找到对应的"索引值"的"个位数"对应的"字符"
     // 100个字符。个位数转换为对应字符。00~09,10~19,20~29,30~39,40~49,50~59,60~69,70~79,80~89,90~99，00~99作为索引号，就可以找到对应的个位数字符了。
     final static char [] DigitOnes = {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
@@ -442,10 +445,10 @@ public final class Integer extends Number implements Comparable<Integer> {
 
         // Generate two digits per iteration. 每次循环转换整数的最后2位数（十位数和个位数）为对应字符
         while (i >= 65536) {
-            q = i / 100;
-        // really: r = i - (q * 100);
-            r = i - ((q << 6) + (q << 5) + (q << 2)); // 十位数+个位数部分。r = i - q * 100; q * 100 = q * 64 + q * 32 + q * 4 = (q << 6) + (q << 5) + (q << 2)
-            i = q;
+            q = i / 100; // 对100取整
+        // really: r = i - (q * 100); // 对100取余
+            r = i - ((q << 6) + (q << 5) + (q << 2)); // 对100取余："十位数+个位数"部分。r = i - q * 100; q * 100 = q * 64 + q * 32 + q * 4 = (q << 6) + (q << 5) + (q << 2)
+            i = q; // 下一次循环要处理的整数
             buf [--charPos] = DigitOnes[r]; // r的个位数转换为对应字符
             buf [--charPos] = DigitTens[r]; // r的十位数转换为对应字符
         }
@@ -453,7 +456,9 @@ public final class Integer extends Number implements Comparable<Integer> {
         // Fall thru to fast mode for smaller numbers
         // assert(i <= 65536, i);
         for (;;) {
+        	// 对10取整
             q = (i * 52429) >>> (16+3); // q = value / 10 = (i * 52429) >>> (16 + 3)；2的19次方=524288；524288/52429=9.999961853...，524288/52429=10.0001525902...
+            // 对10取余
             r = i - ((q << 3) + (q << 1));  // r = i-(q*10) ...；个位数部分。r = i - (q * 10)；q * 10 = q * 8 + q * 2 = (q << 3) + (q << 1)
             buf [--charPos] = digits [r];
             i = q;
